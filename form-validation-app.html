@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Form Validation</title>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="libs/vuelidate.min.js"></script>
+    <script src="libs/validators.min.js"></script>
+    <style>/* Styles are taken from https://github.com/monterail/vuelidate */
+@import url("http://use.fontawesome.com/releases/v5.0.1/css/all.css");
+body {
+    width: 40%;
+    margin: 0 auto;
+    font-family: "Lato", sans-serif;
+}
+input {
+    font-family: "Lato", sans-serif;
+    font-size: 0.875rem;
+    font-weight: 300;
+    color: #374853;
+    line-height: 2.375rem;
+    min-height: 2.375rem;
+    position: relative;
+    border: 1px solid #E8E8E8;
+    border-radius: 5px;
+    background: #fff;
+    padding: 0 0.8125rem;
+    width: 100%;
+    transition: border .1s ease;
+    box-sizing: border-box;
+}
+input.error, input.error:focus {
+    border-color: #f79483;
+}
+input.valid, input.valid:focus {
+    border-color: #41B883;
+}
+input:focus {
+    border-color: #a8a8a8;
+    outline: none;
+}
+label {
+    font-size: 0.8125rem;
+    color: #4b6372;
+    margin-bottom: 0.3125rem;
+    margin-left: 0.875rem;
+    display: block;
+}
+.form-group {
+    margin-bottom: 2rem;
+}
+.error-message {
+    display: block;
+    color: #f57f6c;
+}
+h1 {
+    color: #374853;
+}
+button {
+    font-family: "Lato", sans-serif;
+    font-size: 0.875rem;
+    font-weight: 300;
+    color: #fff;
+    min-height: 2.5rem;
+    line-height: 1.4;
+    padding: 0.5rem 1.875rem 0.625rem;
+    box-sizing: border-box;
+    position: relative;
+    display: inline-block;
+    background: #41B883;
+    border: none;
+    border-radius: 5px;
+    z-index: 1;
+    overflow: hidden;
+    outline: none;
+    vertical-align: middle;
+    transition: 0.1s background ease, 0.1s border-color ease, 0.1s color ease;
+    border-bottom: 3px solid #266d4d;
+    text-decoration: none;
+}
+button:hover, button:focus {
+    background: #349268;
+    cursor: pointer;
+}
+button:disabled {
+    background: #ccc6c6;
+    border-bottom: 3px solid #b3b1b1;
+    cursor: not-allowed;
+}
+
+input[type=checkbox] {
+    visibility: hidden;
+    font-size: 1.33333333em;
+    line-height: .75em;
+    vertical-align: -10%;
+    position: relative;
+    left: 5px;
+    color: #555 !important;
+    font-weight: 200;
+    letter-spacing: 1px;
+}
+
+
+input[type=checkbox]:before {
+    font-family: 'Font Awesome 5 Free' !important;
+    display: inline-block !important;
+    visibility: visible !important;
+}
+
+input[type=checkbox]:before {
+    font-weight: 400;
+    content: "\f0c8";
+}
+
+input[type=checkbox]:checked:before {
+    font-weight: 900;
+    content: "\f14a";
+}
+
+.github-username {
+    position: relative;
+}
+
+.github-username .fa-spinner {
+    position: absolute;
+    top: 33px;
+    right: 10px;
+}</style>
+</head>
+<body>
+    <div id="app">
+        <h1>Form Validation</h1>
+        <form @submit.prevent="submitForm" autocomplete="off">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input  v-model="form.name"
+                        @blur="$v.form.name.$touch()"
+                        :class="{ error: shouldAppendErrorClass($v.form.name), valid: shouldAppendValidClass($v.form.name) }"
+                        id="name">
+                <!-- //@input="$v.form.name.$touch()" $touch has the best practice to decide when dirty is true, while $model is faster for default -->
+                <p v-if="$v.form.name.$error" class="error-message">The name field is required</p>
+            </div>
+
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input  v-model.number="form.age"
+                        @blur="$v.form.age.$touch()"
+                        :class="{ error: shouldAppendErrorClass($v.form.age), valid: shouldAppendValidClass($v.form.age) }"
+                        id="age">
+                <div v-if="$v.form.age.$error">
+                    <p v-if="!$v.form.age.required" class="error-message">The age field is required</p>
+                    <p v-else-if="!$v.form.age.integer" class="error-message">The age field should be an integer</p>
+                    <p v-else-if="!$v.form.age.between" class="error-message">You should be at least 12 and younger than 120 to continue</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="newsletter">Subscribe to the newsletter:</label>
+                <input  v-model="form.newsletter"
+                        type="checkbox" 
+                        id="newsletter"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input  v-model="form.email"
+                        @blur="$v.form.email.$touch()"
+                        :class="{ error: shouldAppendErrorClass($v.form.email), valid: shouldAppendValidClass($v.form.email) }"
+                        id="email">
+                <!-- //@input="$v.form.name.$touch()" $touch has the best practice to decide when dirty is true, while $model is faster for default -->
+                <p v-if="!$v.form.email.email && $v.form.email.$error" class="error-message">Invalid email address</p>
+                <p v-if="!$v.form.email.required && $v.form.email.$error" class="error-message">Email is required for subscription</p>
+            </div>
+
+            <div class="form-group github-username">
+                <label for="github-username">GitHub username:</label>
+                <input  v-model.lazy="$v.form.githubUsername.$model"
+                        :class="{error: shouldAppendErrorClass($v.form.githubUsername), valid: shouldAppendValidClass($v.form.githubUsername)}"
+                        id="github-username"
+                >
+                <span v-show="$v.form.githubUsername.$pending" class="fa fa-spinner fa-spin"></span>
+                <p v-if="!$v.form.githubUsername.exists && $v.form.githubUsername.$error" class="error-message">There is no such GitHub username</p>
+            </div>
+
+            <div class="form-group">
+                <label for="food">Pizza Or Burger:</label>
+                <input  v-model="form.food"
+                        @blur="$v.form.food.$touch()"
+                        :class="{ error: shouldAppendErrorClass($v.form.food), valid: shouldAppendValidClass($v.form.food) }"
+                        id="food">
+                <p v-if="$v.form.food.$error && !$v.form.food.pizzaOrBurger" class="error-message">Sorry! We only serve Pizzas and Burgers</p>
+            </div>
+            
+            <div>
+                <!-- <button :disabled="$v.form.$invalid">Submit</button> -->
+                <button>Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+    <script>
+    Vue.use(vuelidate.default)
+
+        const pizzaOrBurger = value => value === 'pizza' || value === 'burger' || !validators.helpers.req(value);
+        const oldEnoughAndAlive = validators.between(12, 120);
+
+        new Vue({
+            el: '#app',
+
+            data() {
+                return {
+                    form: {
+                        name: null,
+                        age: null,
+                        email: null,
+                        newsletter: null,
+                        githubUsername: null,
+                        food: null,
+                    },
+                    userData: {}
+                }
+            },
+
+            validations: {
+                form: {
+                    name: {
+                        required: validators.required
+                    },
+
+                    age: {
+                        required: validators.required, // $v.form.age.required
+                        integer: validators.integer, // $v.form.age.integer
+                        // min: validators.minValue(12),
+                        // max: validators.maxValue(120),
+                        // between: validators.between(12, 120) // $v.form.age.between
+                        oldEnoughAndAlive
+                    },
+
+                    email: {
+                        email: validators.email,
+                        required: validators.requiredIf(function () {
+                            return !!this.form.newsletter
+                        })
+                    },
+
+                    githubUsername: {
+                        exists(value) {
+                            if (!validators.helpers.req(value)) {
+                                return true
+                            }
+                            return axios.get(`https://api.github.com/users/${value}`)
+
+                        }
+                    },
+
+                    food: {
+                        pizzaOrBurger
+                    }
+                }
+            },
+
+            computed: {
+                nameIsValid() {
+                    return !!this.form.name
+                },
+
+                ageIsValid() {
+                    return typeof this.form.age === 'number' && this.form.age > 12 && this.form.age < 120
+                },
+
+                formIsValid() {
+                    return this.nameIsValid && this.ageIsValid
+                }
+            },
+
+            methods: {
+                shouldAppendValidClass(field) { // ex : field = $v.form.email
+                    return !field.$invalid && field.$model && field.$dirty
+                },
+
+                shouldAppendErrorClass(field) { // ex : field = $v.form.email
+                    return field.error
+                },
+
+                submitForm() {
+                    // this.$v.form.name.$touch() >>> ini untuk touch(bikin dirty ketika klik submit button) input namanya aja
+                    // this.$v.form.age.$touch() >>> ini utk input age nya aja
+                    this.$v.form.$touch() // ini untuk semua input di form nya, dan best practice pake yg ini
+                    this.$v.$touch() // ini untuk touch semua elemen termasuk selain form, lebih baik ga pake ini biar ga ganggu elemen lain
+                    if (!this.$v.form.$invalid) {
+                        console.log('📝 Form Submitted', this.form)
+                    } else {
+                        console.log('❌ Invalid form')
+                    }
+                }
+            }
+        })</script>
+</body>
+</html>
